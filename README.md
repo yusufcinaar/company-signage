@@ -1,31 +1,34 @@
 # Company Signage
 
-Birden fazla ekranda görsel ve video yayınlamak için geliştirdiğim bir proje. Lobi, restoran veya toplantı salonundaki ekranlara tek bir panelden içerik gönderebiliyorum. Her ekranın başına gidip dosya değiştirmek yerine, tarayıcıdan bir oynatma listesi hazırlayıp hangi ekranlarda gösterileceğini seçiyorum.
+Bu projeyi birden fazla ekrandaki görsel ve videoları tek bir yerden değiştirebilmek için yaptım. Mesela lobide bir karşılama görseli, restoranda menü, toplantı salonunda da günün programı açık olabilir. Bunları panelden seçip istediğim ekrana gönderebiliyorum.
+
+Amacım, içerik değişeceği zaman her ekranın yanına ayrı ayrı gitmek zorunda kalmamaktı.
 
 ![Yönetim paneli](docs/images/panel.png)
 
 ## Nasıl çalışıyor?
 
-Sunucu bir Windows bilgisayarda çalışıyor. Yönetim panelini tarayıcıdan açıyorum; görselleri ve videoları buraya yüklüyorum. Ekrana bağlı bilgisayarda ise **Player** uygulaması var. Bu uygulama kendisine gönderilen içerikleri indirip tam ekran oynatıyor.
+Bir bilgisayar sunucu oluyor, yönetim paneli burada çalışıyor. Paneli tarayıcıdan açıp dosyalarımı yüklüyorum. Sonra bir liste hazırlayıp hangi ekranda oynayacağını seçiyorum.
 
-Bağlantı kesildiğinde daha önce indirdiği son yayını kullanabiliyor. Henüz indirilmemiş yeni bir içerik için sunucu bağlantısı gerekiyor.
+Ekranın bağlı olduğu bilgisayarda da **Player** adında küçük bir uygulama çalışıyor. Gönderdiğim dosyaları indirip tam ekran gösteriyor. Yani televizyonun kendisine değil, ona bağlı Windows bilgisayara kuruluyor.
 
-## Neler yapabiliyor?
+Sunucuyla bağlantı kesilirse indirdiği son içeriklerle devam edebiliyor. Yeni bir şey göndermek için bağlantının tekrar gelmesi gerekiyor.
 
-- Görsel ve video yükleme, tek içerik veya oynatma listesi yayınlama.
-- Listedeki içeriklerin sırasını, gösterim süresini ve sesini ayarlama.
-- Aynı yayını birden fazla ekrana gönderme.
-- Ekranların çevrimiçi olup olmadığını panelden görme.
-- Yayını durdurma, oynatıcıyı yenileme ve önbelleği temizleme.
-- API üzerinden başlangıç/bitiş tarihi ve öncelik belirleyerek yayın planlama.
+## Panelden neler yapabiliyorum?
+
+- Görsel ve video yükleyebiliyorum.
+- Birkaç içeriği liste yapıp sırayla oynatabiliyorum.
+- Görsellerin kaç saniye kalacağını ve sesin açık olup olmayacağını seçebiliyorum.
+- Aynı listeyi birden fazla ekrana gönderebiliyorum.
+- Hangi ekranın bağlı olduğunu görebiliyor, yayını durdurup yenileyebiliyorum.
 
 ![İçerik yönetimi](docs/images/icerikler.png)
 
-*Ekran görüntülerindeki içerikler ve ekranlar örnek olarak hazırlandı.*
+*Buradaki ekran görüntülerini örnek içeriklerle hazırladım.*
 
-## Bilgisayarımda nasıl açarım?
+## Denemek istersen
 
-Kaynak kodu çalıştırmak için Windows, **.NET 10 SDK** ve **SQL Server Express** gerekiyor. Player ve yardımcı servis **.NET Framework 4.8** kullanıyor.
+Windows bilgisayarda **.NET 10 SDK** ve **SQL Server Express** kurulu olması gerekiyor. Ekran tarafındaki Player ise **.NET Framework 4.8** kullanıyor.
 
 ```powershell
 git clone https://github.com/yusufcinaar/company-signage.git
@@ -34,27 +37,20 @@ dotnet build CompanySignage.sln -c Release
 dotnet run --project src/CompanySignage.Web
 ```
 
-Varsayılan SQL bağlantısı `localhost\SQLEXPRESS`, veritabanı adı `CompanySignagePublic`. SQL kurulumun farklıysa önce `src/CompanySignage.Web/appsettings.json` içindeki bağlantıyı düzenle. Veritabanı ilk açılışta oluşturuluyor; Windows kullanıcının SQL üzerinde buna yetkisi olmalı.
+SQL bağlantısını `localhost\SQLEXPRESS` olarak ayarladım. Sende farklıysa `src/CompanySignage.Web/appsettings.json` dosyasından değiştirebilirsin. İlk açılışta `CompanySignagePublic` adında bir veritabanı oluşturuyor; kullandığın Windows hesabının SQL'de veritabanı oluşturma yetkisi olmalı.
 
 Panel adresi: **http://localhost:5000**. İlk giriş için kullanıcı adı `admin`, örnek şifre `Admin123!`. Kendi kullanımına geçmeden önce **Ayarlar** sayfasından şifreyi değiştir.
 
-Ekran eklerken belirlediğin **ekran kodunu ve cihaz tokenını** Player'a da aynı şekilde girmen gerekiyor. Token, ekranın sunucuya kendini tanıtması için kullanılıyor.
+Panelde ekran eklerken bir **ekran kodu** ve **cihaz tokenı** belirliyorsun. Player'a da aynı bilgileri girmen gerekiyor. Tokenı o ekranın bağlantı şifresi gibi düşünebilirsin.
 
 Başka bilgisayarlara kurmak için adımlar: [Kurulum](docs/INSTALLATION.md) · [Player kurulumu](docs/PLAYER_SETUP.md).
 
-## Projede neler var?
+## Kullandığım teknolojiler
 
-- **Web:** Tarayıcıdan kullanılan yönetim paneli; API'yi de aynı adreste çalıştırıyor.
-- **Player:** Ekrana bağlı bilgisayarda çalışan WPF uygulaması.
-- **Agent.Win7:** Player'ın yanında kurulan yardımcı Windows servisi.
-- **Application / Domain / Infrastructure:** Yayın kuralları, veri modelleri ve SQL işlemleri.
+Projeyi C# ile geliştirdim. Panelde ASP.NET Core, veritabanında SQL Server ve Entity Framework Core var. Ekran uygulaması WPF ile çalışıyor. Panelden gönderilen komutların ekrana ulaşması için de SignalR kullanılıyor.
 
-C#, ASP.NET Core, Entity Framework Core, SQL Server, WPF ve SignalR kullandım.
+## Küçük bir not
 
-## Kontrol ettiğim kısımlar
+Yüklemeden önce giriş, yayın gönderme, liste sırası, zamanlama ve bağlantı kesilmesi gibi kısımları test ettim. Testlerin ayrıntıları [burada](tests/README.md).
 
-Bu sürümde 56 sunucu kontrolü ve gerçek Player koduyla yapılan 11 kontrol geçti. Giriş ve cihaz tokenı kontrolü, içerik indirme, oynatma listesi sırası, yayın tarihleri, silme/durdurma ve bozuk önbelleğin yeniden indirilmesi bunların içinde.
-
-Sunucu ve Player paketleri de oluşturuldu. Windows 7 bilgisayarda, gerçek televizyonla ve uzun süreli video oynatmada ayrıca deneme yapmak gerekiyor. Bu sürümde o donanım testlerini yapmadım.
-
-Testi kendi bilgisayarında çalıştırmak için [test notlarına](tests/README.md) bakabilirsin.
+Player'ı Windows 7'yi de düşünerek hazırladım ama bu sürümü gerçek bir Windows 7 bilgisayarda ve uzun süreli TV/video kullanımında ayrıca denemek gerekiyor.
