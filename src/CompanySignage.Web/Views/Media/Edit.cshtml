@@ -1,0 +1,40 @@
+@model CompanySignage.Application.DTOs.Media.MediaFileDto
+@{
+    ViewData["Title"] = "İçerik Düzenle";
+}
+
+<h2 class="mb-4">İçerik Düzenle: @Model.Name</h2>
+
+<div class="card p-4" style="max-width: 600px">
+    @if (Model.MediaType == CompanySignage.Domain.Enums.MediaType.Image)
+    {
+        <img src="@Model.FileUrl" class="img-fluid rounded mb-3" style="max-height: 200px; object-fit: contain" alt="@Model.Name" />
+    }
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label class="form-label">İçerik Adı *</label>
+            <input type="text" name="Name" class="form-control" value="@Model.Name" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Açıklama</label>
+            <textarea name="Description" class="form-control" rows="2">@Model.Description</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Görsel Gösterim Süresi (saniye)</label>
+            <input type="number" name="DisplayDuration" class="form-control" value="@Model.DisplayDuration" min="1" max="3600" />
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="SoundEnabled" value="true" class="form-check-input" id="soundEnabled" @(Model.SoundEnabled ? "checked" : "") />
+            <label class="form-check-label" for="soundEnabled">Video sesi açık</label>
+        </div>
+        <div class="mb-4 form-check">
+            <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" @(Model.IsActive ? "checked" : "") />
+            <label class="form-check-label" for="isActive">Aktif</label>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Güncelle</button>
+            <a href="/Media" class="btn btn-outline-secondary">İptal</a>
+        </div>
+    </form>
+</div>

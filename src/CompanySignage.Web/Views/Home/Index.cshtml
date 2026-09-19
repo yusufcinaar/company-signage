@@ -1,0 +1,88 @@
+@model CompanySignage.Application.DTOs.Dashboard.DashboardDto
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-value text-info">@Model.TotalScreens</div>
+            <div class="text-secondary small">Ekran</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-value text-success">@Model.OnlineScreens</div>
+            <div class="text-secondary small">Çevrimiçi</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-value text-warning">@(Model.TotalImages + Model.TotalVideos)</div>
+            <div class="text-secondary small">İçerik</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-value text-primary">@Model.ActiveAssignments</div>
+            <div class="text-secondary small">Aktif Yayın</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="/Media/Upload" class="card stat-card p-4 text-center text-decoration-none">
+            <div class="fs-4 text-light">1. İçerik Yükle</div>
+            <div class="text-secondary mt-2">Görsel veya videoyu kaydet</div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/Playlist" class="card stat-card p-4 text-center text-decoration-none">
+            <div class="fs-4 text-light">2. Liste Oluştur ve Yayınla</div>
+            <div class="text-secondary mt-2">İçerikleri sırala ve ekranları seç</div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="/Screen" class="card stat-card p-4 text-center text-decoration-none">
+            <div class="fs-4 text-light">3. Ekranları Kontrol Et</div>
+            <div class="text-secondary mt-2">Bağlantı ve yayın durumunu izle</div>
+        </a>
+    </div>
+</div>
+
+<div class="card p-3">
+    <h5 class="mb-3">Ekran Durumları</h5>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Durum</th>
+                    <th>Ekran</th>
+                    <th>Yayın</th>
+                    <th>Son Bağlantı</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var screen in Model.Screens)
+                {
+                    <tr>
+                        <td><span class="badge bg-@screen.StatusColor">@screen.StatusText</span></td>
+                        <td>@screen.Name <code class="small">(@screen.ScreenCode)</code></td>
+                        <td>@(screen.CurrentPlaylistName ?? screen.CurrentMediaName ?? "-")</td>
+                        <td>
+                            @if (screen.LastSeenAt.HasValue)
+                            {
+                                @screen.LastSeenAt.Value.ToLocalTime().ToString("dd.MM HH:mm")
+                            }
+                            else
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

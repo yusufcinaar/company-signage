@@ -1,0 +1,191 @@
+@{
+    ViewData["Title"] = "İçerik Yükle ve Gönder";
+    var maxFileSizeMb = ViewData["MaxFileSizeMb"] as long? ?? 200;
+    var screens = ViewData["Screens"] as List<CompanySignage.Application.DTOs.Screen.ScreenDto> ?? new();
+    var activeScreens = screens.Where(screen => screen.IsActive).ToList();
+}
+
+<div class="mb-4">
+    <h2 class="mb-1">İçerik Yükle ve Gönder</h2>
+    <div class="text-secondary">Hedef ekranı seçin; önerilen boyut otomatik gösterilsin ve içerik yüklenince hemen yayınlansın.</div>
+</div>
+
+@if (ViewData["Error"] != null)
+{
+    <div class="alert alert-danger">@ViewData["Error"]</div>
+}
+
+@if (activeScreens.Count == 0)
+{
+    <div class="alert alert-warning">
+        Aktif ekran bulunamadı. Önce <a href="/Screen/Create" class="alert-link">bir ekran ekleyin</a>.
+    </div>
+}
+
+<div class="card p-4" style="max-width: 720px">
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-4">
+            <label class="form-label fs-5" for="targetScreen">1. Hedef ekran</label>
+            <select name="screenId" id="targetScreen" class="form-select form-select-lg" required
+                    @(activeScreens.Count == 0 ? "disabled" : null)>
+                <option value="">Ekran seçin...</option>
+                @foreach (var screen in activeScreens)
+                {
+                    <option value="@screen.Id"
+                            data-width="@screen.ScreenWidth"
+                            data-height="@screen.ScreenHeight"
+                            data-orientation="@screen.Orientation">
+                        @screen.Name (@screen.ScreenCode) — @screen.ScreenWidth × @screen.ScreenHeight
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div id="resolutionGuide" class="alert alert-info mb-4" style="display:none">
+            <strong>Önerilen içerik boyutu:</strong>
+            <span id="recommendedResolution"></span>
+            <div class="small mt-1">
+                En iyi kalite için içeriği bu çözünürlükte hazırlayın. Farklı boyuttaki içerik kırpılmadan ve boşluk bırakmadan ekran oranına esnetilir.
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fs-5" for="mediaFile">2. Dosya</label>
+            <input type="file" name="file" id="mediaFile" class="form-control form-control-lg"
+                   accept=".jpg,.jpeg,.png,.mp4" required />
+            <div class="form-text">JPG, JPEG, PNG veya MP4 (H.264/AAC) — en fazla @maxFileSizeMb MB</div>
+            <div id="fileSizeError" class="text-danger mt-1" style="display:none"></div>
+            <div id="dimensionInfo" class="mt-2" style="display:none"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">İçerik adı</label>
+            <input type="text" name="name" class="form-control" placeholder="Boş bırakılırsa dosya adı kullanılır" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Açıklama</label>
+            <textarea name="description" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Görsel gösterim süresi (saniye)</label>
+            <input type="number" name="displayDuration" class="form-control" value="10" min="1" max="3600" />
+            <div class="form-text">Yalnızca görseller için geçerlidir. Video bitene kadar oynar.</div>
+        </div>
+
+        <div class="mb-4 form-check">
+            <input type="checkbox" name="soundEnabled" value="true" class="form-check-input" id="soundEnabled" checked />
+            <label class="form-check-label" for="soundEnabled">Video sesi açık</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn"
+                    @(activeScreens.Count == 0 ? "disabled" : null)>Yükle ve Hemen Gönder</button>
+            <a href="/Media" class="btn btn-outline-secondary btn-lg">İptal</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    const maxFileSizeBytes = @maxFileSizeMb * 1024 * 1024;
+    const screenSelect = document.getElementById('targetScreen');
+    const fileInput = document.getElementById('mediaFile');
+    const resolutionGuide = document.getElementById('resolutionGuide');
+    const recommendedResolution = document.getElementById('recommendedResolution');
+    const dimensionInfo = document.getElementById('dimensionInfo');
+
+    function selectedResolution() {
+        const option = screenSelect.options[screenSelect.selectedIndex];
+        if (!option || !option.dataset.width || !option.dataset.height) return null;
+        return {
+            width: Number(option.dataset.width),
+            height: Number(option.dataset.height)
+        };
+    }
+
+    function updateResolutionGuide() {
+        const resolution = selectedResolution();
+        resolutionGuide.style.display = resolution ? 'block' : 'none';
+        recommendedResolution.textContent = resolution
+            ? resolution.width + ' × ' + resolution.height + ' piksel'
+            : '';
+        inspectSelectedFile();
+    }
+
+    function showDimensions(width, height) {
+        const target = selectedResolution();
+        dimensionInfo.style.display = 'block';
+
+        if (!target) {
+            dimensionInfo.className = 'alert alert-secondary mt-2 py-2';
+            dimensionInfo.textContent = 'Dosya boyutu: ' + width + ' × ' + height + ' piksel. Karşılaştırmak için hedef ekranı seçin.';
+            return;
+        }
+
+        const exact = width === target.width && height === target.height;
+        dimensionInfo.className = exact
+            ? 'alert alert-success mt-2 py-2'
+            : 'alert alert-warning mt-2 py-2';
+        dimensionInfo.textContent = exact
+            ? 'Dosya boyutu ekranla tam uyumlu: ' + width + ' × ' + height + '.'
+            : 'Dosya: ' + width + ' × ' + height + ', ekran: ' + target.width + ' × ' + target.height +
+              '. Player görüntünün tamamını kırpmadan ekrana uyarlayacak; en iyi kalite için önerilen boyutu kullanın.';
+    }
+
+    function inspectSelectedFile() {
+        dimensionInfo.style.display = 'none';
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        const extension = file.name.split('.').pop().toLowerCase();
+
+        if (file.type.startsWith('image/') || ['jpg', 'jpeg', 'png'].includes(extension)) {
+            const image = new Image();
+            image.onload = function () {
+                showDimensions(image.naturalWidth, image.naturalHeight);
+                URL.revokeObjectURL(url);
+            };
+            image.onerror = function () { URL.revokeObjectURL(url); };
+            image.src = url;
+            return;
+        }
+
+        if (file.type.startsWith('video/') || extension === 'mp4') {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = function () {
+                showDimensions(video.videoWidth, video.videoHeight);
+                URL.revokeObjectURL(url);
+            };
+            video.onerror = function () { URL.revokeObjectURL(url); };
+            video.src = url;
+            return;
+        }
+
+        URL.revokeObjectURL(url);
+    }
+
+    screenSelect.addEventListener('change', updateResolutionGuide);
+    fileInput.addEventListener('change', function () {
+        const error = document.getElementById('fileSizeError');
+        const tooLarge = this.files.length > 0 && this.files[0].size > maxFileSizeBytes;
+        error.textContent = tooLarge ? 'Dosya boyutu en fazla @maxFileSizeMb MB olabilir.' : '';
+        error.style.display = tooLarge ? 'block' : 'none';
+        this.setCustomValidity(tooLarge ? 'Dosya çok büyük.' : '');
+        inspectSelectedFile();
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', function () {
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.textContent = 'Yükleniyor ve gönderiliyor...';
+    });
+
+    updateResolutionGuide();
+</script>
+}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Company Signage</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="d-flex" id="wrapper">
+            <nav class="sidebar d-flex flex-column p-3">
+                <a href="/" class="sidebar-brand mb-4 text-decoration-none">
+                    <span class="fs-5 fw-bold text-light">Company Signage</span>
+                </a>
+                <ul class="nav nav-pills flex-column gap-1">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "text-light")">
+                            Ana Sayfa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Media" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Media" ? "active" : "text-light")">
+                            İçerikler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Playlist" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Playlist" ? "active" : "text-light")">
+                            Oynatma Listeleri ve Yayın
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Screen" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Screen" ? "active" : "text-light")">
+                            Ekranlar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Settings" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "text-light")">
+                            Ayarlar
+                        </a>
+                    </li>
+                </ul>
+                <div class="mt-auto pt-3 border-top border-secondary">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-light small">@User.Identity.Name</span>
+                        <form method="post" action="/Auth/Logout" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Çıkış</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="main-content flex-grow-1 p-4">
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <main>
+            @RenderBody()
+        </main>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

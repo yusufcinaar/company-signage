@@ -1,0 +1,75 @@
+@model List<CompanySignage.Application.DTOs.Playlist.PlaylistDto>
+@{
+    ViewData["Title"] = "Oynatma Listeleri";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Güncel Oynatma Listeleri</h2>
+        <div class="text-secondary">Bir listeyi açın, içerikleri ekleyin ve ekranlara gönderin.</div>
+    </div>
+    <a href="/Playlist/Create" class="btn btn-primary btn-lg">+ Yeni Oynatma Listesi</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="card p-5 text-center">
+        <h4>Henüz oynatma listesi yok</h4>
+        <p class="text-secondary">İlk listenizi oluşturmak için aşağıdaki düğmeye basın.</p>
+        <div><a href="/Playlist/Create" class="btn btn-primary btn-lg">Yeni Oynatma Listesi Oluştur</a></div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var playlist in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h4 class="mb-0">@playlist.Name</h4>
+                        <span class="badge bg-primary">@playlist.ItemCount içerik</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(playlist.Description))
+                    {
+                        <p class="text-secondary">@playlist.Description</p>
+                    }
+                    else
+                    {
+                        <p class="text-secondary">Bu liste için açıklama girilmemiş.</p>
+                    }
+
+                    <div class="small text-secondary mb-4">
+                        Son güncelleme: @playlist.UpdatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                    </div>
+
+                    <div class="mt-auto d-grid gap-2">
+                        <a href="/Playlist/Edit/@playlist.Id" class="btn btn-outline-light btn-lg">Listeyi Aç</a>
+                        <a href="/Playlist/Edit/@playlist.Id#step3" class="btn btn-success btn-lg">Ekranlara Yayınla</a>
+                        <form method="post" action="/Playlist/Delete/@playlist.Id"
+                              onsubmit="return confirm('Bu oynatma listesini kalıcı olarak silmek istediğinize emin misiniz? Bu listeyi gösteren ekranların yayını durdurulur.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger w-100">Oynatma Listesini Sil</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

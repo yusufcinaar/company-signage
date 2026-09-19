@@ -1,0 +1,119 @@
+@model CompanySignage.Application.DTOs.Screen.ScreenDto
+@{
+    ViewData["Title"] = "Ekran Düzenle";
+}
+
+<div class="mb-4">
+    <h2 class="mb-1">@Model.Name</h2>
+    <div class="text-secondary">Ekran kodu: @Model.ScreenCode</div>
+</div>
+
+<div class="card p-4" style="max-width: 720px">
+    <form method="post" id="screenForm">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-4">
+            <label class="form-label fs-5">1. Ekranın adı</label>
+            <input type="text" name="Name" class="form-control form-control-lg" value="@Model.Name" required />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fs-5 d-block">2. Ekran yönü</label>
+            <div class="row g-2">
+                <div class="col-6">
+                    <input type="radio" class="btn-check" name="Orientation" id="landscape" value="Landscape"
+                           @(Model.Orientation != "Portrait" ? "checked" : null) onchange="buildResolutionOptions()" />
+                    <label class="btn btn-outline-primary w-100 py-3" for="landscape">
+                        <strong>Yatay</strong><br /><span class="small">Televizyon / monitör</span>
+                    </label>
+                </div>
+                <div class="col-6">
+                    <input type="radio" class="btn-check" name="Orientation" id="portrait" value="Portrait"
+                           @(Model.Orientation == "Portrait" ? "checked" : null) onchange="buildResolutionOptions()" />
+                    <label class="btn btn-outline-primary w-100 py-3" for="portrait">
+                        <strong>Dikey</strong><br /><span class="small">Totem / dik ekran</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fs-5" for="resolutionSelect">3. Algılanan ekran çözünürlüğü</label>
+            <select class="form-select form-select-lg" id="resolutionSelect" onchange="applyResolution()"></select>
+            <input type="hidden" name="ScreenWidth" id="screenWidth" value="@Model.ScreenWidth" />
+            <input type="hidden" name="ScreenHeight" id="screenHeight" value="@Model.ScreenHeight" />
+            <div class="form-text">Player çalışırken ana monitörün gerçek çözünürlüğü otomatik olarak buraya yazılır.</div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fs-5 d-block">4. Görüntü ekrana nasıl yerleşsin?</label>
+            <div class="row g-2">
+                <div class="col-12">
+                    <input type="radio" class="btn-check" name="DisplayMode" id="displayFill" value="Fill" checked />
+                    <label class="btn btn-outline-success w-100 h-100 py-3" for="displayFill">
+                        <strong>Tam Ekran (Kırpmasız)</strong><br />
+                        <span class="small">Görüntünün tamamını ekran oranına göre esnetir; kırpma ve boşluk olmaz.</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <details class="mb-4">
+            <summary class="text-secondary">Diğer ayarlar</summary>
+            <div class="mt-3">
+                <label class="form-label">Açıklama</label>
+                <textarea name="Description" class="form-control" rows="2">@Model.Description</textarea>
+            </div>
+            <div class="mt-3 form-check">
+                <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" @(Model.IsActive ? "checked" : null) />
+                <label class="form-check-label" for="isActive">Ekran aktif</label>
+            </div>
+        </details>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">Değişiklikleri Kaydet</button>
+            <a href="/Screen" class="btn btn-outline-secondary btn-lg">Vazgeç</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    const initialWidth = @Model.ScreenWidth;
+    const initialHeight = @Model.ScreenHeight;
+    const landscapeResolutions = [
+        [1260, 720], [1280, 720], [1360, 768], [1366, 768],
+        [1600, 900], [1920, 1080], [2560, 1440], [3840, 2160]
+    ];
+
+    function buildResolutionOptions() {
+        const portrait = document.getElementById('portrait').checked;
+        const select = document.getElementById('resolutionSelect');
+        const resolutions = landscapeResolutions.map(function (size) {
+            return portrait ? [size[1], size[0]] : size;
+        });
+
+        if (!resolutions.some(function (size) { return size[0] === initialWidth && size[1] === initialHeight; })) {
+            resolutions.unshift([initialWidth, initialHeight]);
+        }
+
+        select.innerHTML = '';
+        resolutions.forEach(function (size) {
+            const option = document.createElement('option');
+            option.value = size[0] + 'x' + size[1];
+            option.textContent = size[0] + ' × ' + size[1];
+            if (size[0] === initialWidth && size[1] === initialHeight) option.selected = true;
+            select.appendChild(option);
+        });
+        applyResolution();
+    }
+
+    function applyResolution() {
+        const parts = document.getElementById('resolutionSelect').value.split('x');
+        document.getElementById('screenWidth').value = parts[0];
+        document.getElementById('screenHeight').value = parts[1];
+    }
+
+    buildResolutionOptions();
+</script>
+}

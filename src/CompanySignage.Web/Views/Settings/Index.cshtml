@@ -1,0 +1,97 @@
+@using CompanySignage.Web.Models
+@{
+    ViewData["Title"] = "Ayarlar";
+    var backup = ViewData["BackupSettings"] as BackupSettings ?? new BackupSettings();
+}
+
+<h2 class="mb-4">Ayarlar</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">@TempData["Success"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">@TempData["Error"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card p-4 mb-4">
+            <h5 class="mb-3">💾 Yedekleme Ayarları</h5>
+            <form method="post" asp-action="SaveBackupSettings">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">Yedek Klasörü</label>
+                    <input type="text" name="backupFolder" class="form-control" value="@backup.BackupFolder" required />
+                    <div class="form-text">Örnek: C:\CompanySignagePublic\Server\Backups veya D:\SignageBackups</div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Günlük Yedekleme Saati</label>
+                        <input type="time" name="backupTime" class="form-control" value="@backup.BackupTime" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Saklama Süresi (gün)</label>
+                        <input type="number" name="retentionDays" class="form-control" value="@backup.RetentionDays" min="1" max="3650" required />
+                    </div>
+                </div>
+                <div class="form-check my-3">
+                    <input type="checkbox" name="autoBackupEnabled" value="true" class="form-check-input" id="autoBackupEnabled" @(backup.AutoBackupEnabled ? "checked" : "") />
+                    <label class="form-check-label" for="autoBackupEnabled">Otomatik günlük yedekleme açık</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Yedekleme Ayarlarını Kaydet</button>
+            </form>
+            <hr />
+            <form method="post" asp-action="RunBackup">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success">Şimdi Yedekle</button>
+            </form>
+            <div class="mt-3 small">
+                <strong>Son işlem:</strong>
+                @if (backup.LastBackupAt.HasValue)
+                {
+                    <span class="badge bg-@(backup.LastBackupSucceeded == true ? "success" : "danger") ms-1">@(backup.LastBackupSucceeded == true ? "Başarılı" : "Hatalı")</span>
+                    <span class="text-secondary ms-1">@backup.LastBackupAt.Value.ToString("dd.MM.yyyy HH:mm:ss")</span>
+                    <div class="text-secondary mt-1">@backup.LastBackupMessage</div>
+                }
+                else
+                {
+                    <span class="text-secondary">Henüz yedek alınmadı.</span>
+                }
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <h5 class="mb-3">🔐 Şifre Değiştir</h5>
+            <form method="post" asp-action="ChangePassword">
+                @Html.AntiForgeryToken()
+                <div class="mb-3"><label class="form-label">Mevcut Şifre</label><input type="password" name="currentPassword" class="form-control" required /></div>
+                <div class="mb-3"><label class="form-label">Yeni Şifre (en az 8 karakter)</label><input type="password" name="newPassword" class="form-control" required minlength="8" /></div>
+                <div class="mb-3"><label class="form-label">Yeni Şifre (tekrar)</label><input type="password" name="confirmPassword" class="form-control" required minlength="8" /></div>
+                <button type="submit" class="btn btn-primary">Şifreyi Değiştir</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card p-4 mb-4">
+            <h5 class="mb-3">ℹ️ Sistem Bilgileri</h5>
+            <table class="table table-dark table-sm">
+                <tr><td class="text-secondary">Sunucu Adresi</td><td><code>@ViewData["BaseUrl"]</code></td></tr>
+                <tr><td class="text-secondary">MSSQL Sunucusu</td><td><code>@ViewData["SqlServer"]</code></td></tr>
+                <tr><td class="text-secondary">Veritabanı</td><td><code>@ViewData["DatabaseName"]</code></td></tr>
+                <tr><td class="text-secondary">SQL Şifreleme</td><td><code>@ViewData["SqlEncrypted"]</code></td></tr>
+                <tr><td class="text-secondary">Medya Klasörü</td><td><code>@ViewData["UploadFolder"]</code></td></tr>
+            </table>
+        </div>
+        <div class="card p-4">
+            <h5 class="mb-3">Yedek İçeriği</h5>
+            <ul class="text-secondary small mb-0">
+                <li>MSSQL veritabanı: <code>database.bak</code></li>
+                <li>Tüm medya dosyaları: <code>Uploads</code></li>
+                <li>Sunucu ayarları: <code>appsettings.json</code></li>
+            </ul>
+        </div>
+    </div>
+</div>

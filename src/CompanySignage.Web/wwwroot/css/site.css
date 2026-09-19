@@ -1,0 +1,124 @@
+:root {
+    --sidebar-width: 260px;
+    --bg-dark: #12151c;
+    --bg-card: #1c212c;
+    --bg-sidebar: #171b24;
+    --accent: #4f8ef7;
+}
+
+html, body {
+    height: 100%;
+    background-color: var(--bg-dark);
+}
+
+#wrapper {
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    min-height: 100vh;
+    border-right: 1px solid #2a3040;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar .nav-link {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #232937;
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--accent);
+}
+
+.main-content {
+    background-color: var(--bg-dark);
+    min-height: 100vh;
+    overflow-x: auto;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid #2a3040;
+    border-radius: 12px;
+}
+
+.stat-card {
+    transition: transform 0.15s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.table {
+    --bs-table-bg: transparent;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-dot.online { background-color: #22c55e; }
+.status-dot.offline { background-color: #ef4444; }
+.status-dot.downloading { background-color: #f97316; }
+.status-dot.playing { background-color: #4f8ef7; }
+.status-dot.disabled { background-color: #6b7280; }
+
+.media-thumb {
+    width: 80px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.playlist-item-row {
+    cursor: grab;
+    user-select: none;
+}
+
+.playlist-item-row.dragging {
+    opacity: 0.5;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #12151c 0%, #1a2233 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70px;
+        min-width: 70px;
+    }
+    .sidebar .nav-link {
+        text-align: center;
+        padding: 10px 4px;
+        font-size: 1.2rem;
+    }
+}

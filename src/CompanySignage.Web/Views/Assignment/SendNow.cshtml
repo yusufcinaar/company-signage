@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "İçerik Gönder";
+    var screens = ViewData["Screens"] as List<CompanySignage.Application.DTOs.Screen.ScreenDto> ?? new();
+    var mediaFiles = ViewData["MediaFiles"] as List<CompanySignage.Application.DTOs.Media.MediaFileDto> ?? new();
+    var playlists = ViewData["Playlists"] as List<CompanySignage.Application.DTOs.Playlist.PlaylistDto> ?? new();
+    var preselectedId = ViewData["PreselectedScreenId"] as int?;
+}
+
+<h2 class="mb-4">📤 İçerik Gönder</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card p-4">
+                <h5 class="mb-3">1. Ekranları Seçin</h5>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="selectAllScreens(true)">Tümünü Seç</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllScreens(false)">Temizle</button>
+                </div>
+                @foreach (var screen in screens.Where(s => s.IsActive))
+                {
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="screenIds" value="@screen.Id" class="form-check-input screen-check" id="screen-@screen.Id"
+                               @(preselectedId == screen.Id ? "checked" : "") />
+                        <label class="form-check-label" for="screen-@screen.Id">
+                            <span class="status-dot @(screen.IsOnline ? "online" : "offline")"></span>
+                            @screen.Name <code class="small">(@screen.ScreenCode)</code>
+                            @if (!screen.IsOnline)
+                            {
+                                <span class="badge bg-danger ms-1">Çevrimdışı</span>
+                            }
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <h5 class="mb-3">2. İçerik Seçin</h5>
+
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" name="contentType" value="media" class="form-check-input" id="typeMedia" checked onchange="toggleContentType()" />
+                        <label class="form-check-label" for="typeMedia">Tekil İçerik (Görsel/Video)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" name="contentType" value="playlist" class="form-check-input" id="typePlaylist" onchange="toggleContentType()" />
+                        <label class="form-check-label" for="typePlaylist">Playlist</label>
+                    </div>
+                </div>
+
+                <div id="mediaSelect" class="mb-3">
+                    <label class="form-label">İçerik</label>
+                    <select name="mediaFileId" class="form-select">
+                        <option value="">Seçiniz...</option>
+                        @foreach (var media in mediaFiles.Where(m => m.IsActive))
+                        {
+                            <option value="@media.Id">[@media.MediaTypeText] @media.Name (@media.FileSizeText)</option>
+                        }
+                    </select>
+                </div>
+
+                <div id="playlistSelect" class="mb-3" style="display:none">
+                    <label class="form-label">Playlist</label>
+                    <select name="playlistId" class="form-select">
+                        <option value="">Seçiniz...</option>
+                        @foreach (var playlist in playlists.Where(p => p.IsActive))
+                        {
+                            <option value="@playlist.Id">@playlist.Name (@playlist.ItemCount içerik)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">🚀 Şimdi Gönder</button>
+                    <a href="/Assignment" class="btn btn-outline-secondary btn-lg">İptal</a>
+                </div>
+                <div class="form-text mt-2">
+                    Gönderim sonrası seçilen ekranlara SignalR üzerinden anlık bildirim yapılır.
+                    Çevrimdışı ekranlar tekrar bağlandıklarında güncel yayını otomatik alır.
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function selectAllScreens(state) {
+            document.querySelectorAll('.screen-check').forEach(cb => cb.checked = state);
+        }
+        function toggleContentType() {
+            const isMedia = document.getElementById('typeMedia').checked;
+            document.getElementById('mediaSelect').style.display = isMedia ? 'block' : 'none';
+            document.getElementById('playlistSelect').style.display = isMedia ? 'none' : 'block';
+        }
+    </script>
+}

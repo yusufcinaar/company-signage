@@ -1,0 +1,32 @@
+@model CompanySignage.Application.DTOs.Playlist.CreatePlaylistDto
+@{
+    ViewData["Title"] = "Yeni Oynatma Listesi";
+}
+
+<div class="mb-4">
+    <h2 class="mb-1">Yeni Oynatma Listesi</h2>
+    <div class="text-secondary">Önce listeye bir isim verin. Sonraki ekranda içerikleri ekleyeceksiniz.</div>
+</div>
+
+@if (ViewData["Error"] != null)
+{
+    <div class="alert alert-danger">@ViewData["Error"]</div>
+}
+
+<div class="card p-4" style="max-width: 650px">
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="IsLoop" value="true" />
+
+        <div class="mb-4">
+            <label class="form-label fs-4">Listenin adı nedir?</label>
+            <input type="text" name="Name" class="form-control form-control-lg" value="@Model?.Name"
+                   required autofocus placeholder="Örnek: Lobi Sabah Yayını" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">Devam Et ve İçerik Ekle</button>
+            <a href="/Playlist" class="btn btn-outline-secondary btn-lg">Vazgeç</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,65 @@
+@model List<CompanySignage.Application.DTOs.Assignment.AssignmentDto>
+@{
+    ViewData["Title"] = "Yayın Yönetimi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Yayın Yönetimi</h2>
+    <a href="/Assignment/SendNow" class="btn btn-primary">📤 İçerik Gönder</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Ekran</th>
+                    <th>Tür</th>
+                    <th>İçerik</th>
+                    <th>Öncelik</th>
+                    <th>Durum</th>
+                    <th>Tarih</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@a.ScreenName <code class="small">(@a.ScreenCode)</code></td>
+                        <td>@a.AssignmentTypeText</td>
+                        <td>@(a.PlaylistName ?? a.MediaName ?? "-")</td>
+                        <td>@a.Priority</td>
+                        <td>
+                            <span class="badge bg-@(a.IsActive ? "success" : "secondary")">
+                                @(a.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                        </td>
+                        <td>@a.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            <form method="post" action="/Assignment/Delete/@a.Id" class="d-inline" onsubmit="return confirm('Bu atamayı silmek istediğinize emin misiniz?')">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-danger">❌</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

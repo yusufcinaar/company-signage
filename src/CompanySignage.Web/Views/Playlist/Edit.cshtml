@@ -1,0 +1,263 @@
+@model CompanySignage.Application.DTOs.Playlist.PlaylistDto
+@{
+    ViewData["Title"] = Model.Name;
+    var mediaFiles = ViewData["MediaFiles"] as List<CompanySignage.Application.DTOs.Media.MediaFileDto> ?? new();
+    var screens = ViewData["Screens"] as List<CompanySignage.Application.DTOs.Screen.ScreenDto> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">@Model.Name</h2>
+        <div class="text-secondary">İçerikleri ekleyin, sırasını kontrol edin ve ekranlara gönderin.</div>
+    </div>
+    <a href="/Playlist" class="btn btn-outline-secondary">Listelere Dön</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-2 mb-4">
+    <div class="col-md-4">
+        <a href="#step1" class="card p-3 text-decoration-none h-100 border-primary">
+            <strong class="text-primary">1. İçerikleri Ekle</strong>
+            <span class="text-secondary small">Görsel ve videoları seç</span>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="#step2" class="card p-3 text-decoration-none h-100 border-primary">
+            <strong class="text-primary">2. Sırayı Kontrol Et</strong>
+            <span class="text-secondary small">@Model.ItemCount içerik sırada</span>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="#step3" class="card p-3 text-decoration-none h-100 border-success">
+            <strong class="text-success">3. Ekranlara Gönder</strong>
+            <span class="text-secondary small">Ekranı seç ve yayınla</span>
+        </a>
+    </div>
+</div>
+
+<section class="card p-4 mb-4" id="step1">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-1">1. İçerikleri Ekle</h3>
+            <div class="text-secondary">Eklemek istediğiniz içeriğin yanındaki “Ekle” düğmesine basın.</div>
+        </div>
+        <a href="/Media/Upload" class="btn btn-outline-primary">+ Yeni İçerik Yükle</a>
+    </div>
+
+    @if (!mediaFiles.Any(m => m.IsActive))
+    {
+        <div class="alert alert-warning mb-0">
+            Henüz kullanılabilir içerik yok. Önce “Yeni İçerik Yükle” düğmesine basın.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var media in mediaFiles.Where(m => m.IsActive))
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="border border-secondary rounded p-3 h-100 d-flex align-items-center gap-3">
+                        @if (media.MediaType == CompanySignage.Domain.Enums.MediaType.Image)
+                        {
+                            <img src="@media.FileUrl" alt="@media.Name"
+                                 style="width:84px;height:54px;object-fit:cover;border-radius:4px;background:#000;" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-primary rounded"
+                                 style="width:84px;height:54px;">VİDEO</div>
+                        }
+
+                        <div class="flex-grow-1 overflow-hidden">
+                            <strong class="d-block text-truncate">@media.Name</strong>
+                            <span class="small text-secondary">@media.MediaTypeText</span>
+                        </div>
+
+                        <form method="post" action="/Playlist/AddItem/@Model.Id" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="MediaFileId" value="@media.Id" />
+                            <input type="hidden" name="DisplayDuration" value="@media.DisplayDuration" />
+                            <input type="hidden" name="SoundEnabled" value="true" />
+                            <button type="submit" class="btn btn-primary">Ekle</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<section class="card p-4 mb-4" id="step2">
+    <div class="mb-3">
+        <h3 class="mb-1">2. Oynatma Sırası</h3>
+        <div class="text-secondary">Yukarı ve aşağı düğmeleriyle sırayı değiştirin. Her işlem otomatik kaydedilir.</div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="alert alert-info mb-0">Liste boş. Önce yukarıdaki bölümden en az bir içerik ekleyin.</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @for (var index = 0; index < Model.Items.Count; index++)
+            {
+                var item = Model.Items[index];
+                <div class="list-group-item bg-dark text-light border-secondary d-flex align-items-center gap-3 p-3">
+                    <span class="badge bg-primary fs-6">@(index + 1)</span>
+
+                    <div class="flex-grow-1">
+                        <strong>@item.MediaName</strong>
+                        <div class="small text-secondary">
+                            @(item.MediaType == CompanySignage.Domain.Enums.MediaType.Video
+                                ? "Video — bitene kadar oynar"
+                                : "Görsel — " + item.DisplayDuration + " saniye")
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-1">
+                        <form method="post" action="/Playlist/MoveItem/@Model.Id" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <input type="hidden" name="direction" value="up" />
+                            <button class="btn btn-outline-light" title="Yukarı taşı" @(index == 0 ? "disabled" : null)>Yukarı</button>
+                        </form>
+                        <form method="post" action="/Playlist/MoveItem/@Model.Id" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <input type="hidden" name="direction" value="down" />
+                            <button class="btn btn-outline-light" title="Aşağı taşı" @(index == Model.Items.Count - 1 ? "disabled" : null)>Aşağı</button>
+                        </form>
+                        <form method="post" action="/Playlist/RemoveItem" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <input type="hidden" name="playlistId" value="@Model.Id" />
+                            <button class="btn btn-outline-danger">Çıkar</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<section class="card p-4 mb-4 border-success" id="step3">
+    <div class="mb-3">
+        <h3 class="mb-1">3. Ekranlara Gönder</h3>
+        <div class="text-secondary">Bu listeyi gösterecek ekranları işaretleyin ve yeşil düğmeye basın.</div>
+    </div>
+
+    <form method="post" action="/Playlist/Publish/@Model.Id" id="publishForm">
+        @Html.AntiForgeryToken()
+
+        @if (!screens.Any(s => s.IsActive))
+        {
+            <div class="alert alert-warning">
+                Henüz aktif ekran yok. Önce <a href="/Screen/Create" class="alert-link">yeni ekran ekleyin</a>.
+            </div>
+        }
+        else
+        {
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="selectAllScreens(true)">Tüm Ekranları Seç</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllScreens(false)">Seçimi Temizle</button>
+            </div>
+
+            <div class="row g-2 mb-4">
+                @foreach (var screen in screens.Where(s => s.IsActive))
+                {
+                    <div class="col-md-6">
+                        <label class="screen-option border border-secondary rounded p-3 d-flex align-items-center gap-3 w-100 h-100">
+                            <input type="checkbox" name="screenIds" value="@screen.Id" class="form-check-input screen-check mt-0" />
+                            <span class="flex-grow-1">
+                                <strong class="d-block">@screen.Name</strong>
+                                <span class="small text-secondary">
+                                    @screen.ScreenWidth × @screen.ScreenHeight ·
+                                    @(screen.Orientation == "Portrait" ? "Dikey" : "Yatay") ·
+                                    @(screen.DisplayMode == "Fit" ? "Ekrana Sığdır" : "Ekranı Doldur")
+                                </span>
+                            </span>
+                            <span class="badge bg-@(screen.IsOnline ? "success" : "danger")">
+                                @(screen.IsOnline ? "Bağlı" : "Çevrimdışı")
+                            </span>
+                        </label>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (!Model.Items.Any())
+        {
+            <div class="alert alert-warning">Göndermek için önce listeye içerik ekleyin.</div>
+            <button type="button" class="btn btn-success btn-lg" disabled>Seçili Ekranlara Gönder</button>
+        }
+        else if (!screens.Any(s => s.IsActive))
+        {
+            <button type="button" class="btn btn-success btn-lg" disabled>Seçili Ekranlara Gönder</button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-success btn-lg" id="publishBtn">Seçili Ekranlara Gönder</button>
+        }
+    </form>
+</section>
+
+<details class="card p-4 mb-4">
+    <summary class="fw-bold">Liste adını veya açıklamasını değiştir</summary>
+    <form method="post" action="/Playlist/Update/@Model.Id" class="mt-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="IsLoop" value="@(Model.IsLoop ? "true" : "false")" />
+        <input type="hidden" name="IsActive" value="@(Model.IsActive ? "true" : "false")" />
+
+        <div class="mb-3">
+            <label class="form-label">Liste adı</label>
+            <input type="text" name="Name" class="form-control" value="@Model.Name" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Açıklama</label>
+            <textarea name="Description" class="form-control" rows="2">@Model.Description</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Bilgileri Kaydet</button>
+    </form>
+</details>
+
+@section Scripts {
+<script>
+    function selectAllScreens(state) {
+        document.querySelectorAll('.screen-check').forEach(function (checkbox) {
+            checkbox.checked = state;
+        });
+    }
+
+    const publishForm = document.getElementById('publishForm');
+    if (publishForm) {
+        publishForm.addEventListener('submit', function (event) {
+            if (document.querySelectorAll('.screen-check:checked').length === 0) {
+                event.preventDefault();
+                alert('Lütfen en az bir ekran seçin.');
+                return;
+            }
+
+            const button = document.getElementById('publishBtn');
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Gönderiliyor...';
+            }
+        });
+    }
+</script>
+}
